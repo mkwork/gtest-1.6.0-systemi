@@ -505,14 +505,19 @@ class CapturedStream {
     GTEST_CHECK_(captured_fd != -1) << "Unable to open temporary file "
                                     << temp_file_path;
     filename_ = temp_file_path;
+	
+// There's no guarantee that a test has write access to the
+// current directory, so we create the temporary file in the /tmp
+// directory instead.
+# elif GTEST_OS_OS_400
+	FILE* captured_fp = tmpfile();
+	const int captured_fd = fileno(captured_fp);
 # else
-    // There's no guarantee that a test has write access to the
-    // current directory, so we create the temporary file in the /tmp
-    // directory instead.
     char name_template[] = "/tmp/captured_stream.XXXXXX";
     const int captured_fd = mkstemp(name_template);
     filename_ = name_template;
 # endif  // GTEST_OS_WINDOWS
+
     fflush(NULL);
     dup2(captured_fd, fd_);
     close(captured_fd);
