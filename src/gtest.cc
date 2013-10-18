@@ -136,6 +136,14 @@
 # define vsnprintf _vsnprintf
 #endif  // GTEST_OS_WINDOWS
 
+//This ugly code was introduced because ibm compiler can't deduce type for template function parameter
+#ifdef GTEST_OS_OS_400 
+#define GTEST_INTERNAL_DELETE_ALL_CAST (void (*)(void *))
+#else 
+#define GTEST_INTERNAL_DELETE_ALL_CAST
+#endif 
+#define GTEST_INTERNAL_DELETE_ALL(Container, Deleter) ForEach(Container, GTEST_INTERNAL_DELETE_ALL_CAST Deleter)
+
 namespace testing {
 
 using internal::CountIf;
@@ -2402,7 +2410,8 @@ TestCase::TestCase(const char* a_name, const char* a_type_param,
 // Destructor of TestCase.
 TestCase::~TestCase() {
   // Deletes every Test in the collection.
-  ForEach(test_info_list_, internal::Delete<TestInfo>);
+  GTEST_INTERNAL_DELETE_ALL(test_info_list_, internal::Delete<TestInfo>);
+ 
 }
 
 // Returns the i-th test among all the tests. i can range from 0 to
@@ -2931,7 +2940,7 @@ class TestEventRepeater : public TestEventListener {
 };
 
 TestEventRepeater::~TestEventRepeater() {
-  ForEach(listeners_, Delete<TestEventListener>);
+  GTEST_INTERNAL_DELETE_ALL(listeners_, Delete<TestEventListener>);
 }
 
 void TestEventRepeater::Append(TestEventListener *listener) {
@@ -3977,10 +3986,10 @@ UnitTestImpl::UnitTestImpl(UnitTest* parent)
 
 UnitTestImpl::~UnitTestImpl() {
   // Deletes every TestCase.
-  ForEach(test_cases_, internal::Delete<TestCase>);
+  GTEST_INTERNAL_DELETE_ALL(test_cases_, internal::Delete<TestCase>);
 
   // Deletes every Environment.
-  ForEach(environments_, internal::Delete<Environment>);
+  GTEST_INTERNAL_DELETE_ALL(environments_, internal::Delete<Environment>);
 
   delete os_stack_trace_getter_;
 }
