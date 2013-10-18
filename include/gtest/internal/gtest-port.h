@@ -98,6 +98,7 @@
 //     GTEST_OS_WINDOWS_MINGW    - MinGW
 //     GTEST_OS_WINDOWS_MOBILE   - Windows Mobile
 //   GTEST_OS_ZOS      - z/OS
+//   GTEST_OS_OS_400      - os/400, IBM systemi
 //
 // Among the platforms, Cygwin, Linux, Max OS X, and Windows have the
 // most stable support.  Since core members of the Google Test project
@@ -242,7 +243,10 @@
 # define GTEST_OS_HPUX 1
 #elif defined __native_client__
 # define GTEST_OS_NACL 1
+#elif defined __OS400__
+# define GTEST_OS_OS_400 1
 #endif  // __CYGWIN__
+
 
 // Brings in definitions for functions used in the testing::internal::posix
 // namespace (read, write, close, chdir, isatty, stat). We do not currently
@@ -1558,7 +1562,7 @@ inline int StrCaseCmp(const char* s1, const char* s2) {
 }
 inline char* StrDup(const char* src) { return strdup(src); }
 # else  // !__BORLANDC__
-#  if GTEST_OS_WINDOWS_MOBILE
+#  if GTEST_OS_WINDOWS_MOBILE 
 inline int IsATTY(int /* fd */) { return 0; }
 #  else
 inline int IsATTY(int fd) { return _isatty(fd); }
@@ -1587,7 +1591,11 @@ inline bool IsDir(const StatStruct& st) {
 typedef struct stat StatStruct;
 
 inline int FileNo(FILE* file) { return fileno(file); }
+# if GTEST_OS_OS_400
+inline int IsATTY(int /*fd*/) { return 0;}
+# else
 inline int IsATTY(int fd) { return isatty(fd); }
+#endif // GTEST_OS_OS_400
 inline int Stat(const char* path, StatStruct* buf) { return stat(path, buf); }
 inline int StrCaseCmp(const char* s1, const char* s2) {
   return strcasecmp(s1, s2);
